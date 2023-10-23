@@ -14,7 +14,7 @@ function maven_build {
     set_make_vars_and_artifact_token
     end_stage_if_properties_trigger "${GIT_REPO}" "${PROPERTIES_REPO_SUFFIX}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
-    cd_deploy_dir "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}" || exit 1
     cp_docker_settings
     run_make_configure
     run_mvn_clean_install
@@ -26,7 +26,7 @@ function maven_test {
     set_make_vars_and_artifact_token
     end_stage_if_properties_trigger "${GIT_REPO}" "${PROPERTIES_REPO_SUFFIX}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
-    cd_deploy_dir "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}" || exit 1
     cp_docker_settings
     run_make_configure
     run_make_git_config

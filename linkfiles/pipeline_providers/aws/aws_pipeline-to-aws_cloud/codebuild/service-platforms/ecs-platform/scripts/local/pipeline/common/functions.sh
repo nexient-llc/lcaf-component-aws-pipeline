@@ -27,7 +27,9 @@ function push_docker_image {
 }
 
 function python_setup {
-    cd "$1" || exit 1
+    local dir=$1
+
+    cd "$dir" || exit 1
     pip3 install .
 }
 
@@ -37,18 +39,26 @@ function run_mvn_clean_install {
 }
 
 function create_properties_var_file {
-    cd "$7" ||  exit 1
-    cp -rf $1/${2}${6}/$3/terragrunt/* ./
-    echo "app_image_tag=\"$5/$2:$4\"
+    local base_path=$1
+    local repository=$2
+    local target_env=$3
+    local image_tag=$4
+    local container_uri=$5
+    local properties=$6
+    local dir=$7
+
+    cd "$dir" ||  exit 1
+    cp -rf $base_path/${repository}${properties}/$target_env/terragrunt/* ./
+    echo "app_image_tag=\"$container_uri/$repository:$image_tag\"
         force_new_deployment=\"true\"
         app_environment = {
         timestamp=$(date +%s)
-        $(cat $1/$2/configuration/application-envvars.env)
-        $(cat $1/$2/configuration/wildfly-envvars.env)
+        $(cat $base_path/$repository/configuration/application-envvars.env)
+        $(cat $base_path/$repository/configuration/wildfly-envvars.env)
         }
         app_secrets = {
-        $(cat $1/$2/configuration/application-envsecrets-arns.env)
-        $(cat $1/$2/configuration/wildfly-envsecrets-arns.env)
+        $(cat $base_path/$repository/configuration/application-envsecrets-arns.env)
+        $(cat $base_path/$repository/configuration/wildfly-envsecrets-arns.env)
         }" > env_vars.tfvars
 }
 
@@ -58,34 +68,27 @@ function run_terragrunt_apply_var_file {
 }
 
 function print_running_td {
+    local profile=$1
+
     echo 'Printing current ECS running task definition'
     CLUSTER_ARN=$(python3 -c "import yaml;print(yaml.safe_load(open('inputs.yaml'))['ecs_cluster_arn'])")
-    CLUSTER_SERVICES=$(aws ecs list-services --cluster "$CLUSTER_ARN" --output text --query 'serviceArns[]' --profile "$1")
+    CLUSTER_SERVICES=$(aws ecs list-services --cluster "$CLUSTER_ARN" --output text --query 'serviceArns[]' --profile "$profile")
     for SERVICE_ARN in $CLUSTER_SERVICES
         do
             echo "Task definition for :$SERVICE_ARN"
-            aws ecs describe-task-definition --task-definition $(aws ecs describe-services --cluster "$CLUSTER_ARN" --services "$SERVICE_ARN" --query "services[0].taskDefinition" --output text --profile "$1") --profile "$1"
+            aws ecs describe-task-definition --task-definition $(aws ecs describe-services --cluster "$CLUSTER_ARN" --services "$SERVICE_ARN" --query "services[0].taskDefinition" --output text --profile "$profile") --profile "$1"
     done
 }
 
 function add_ecr_image_tag {
-    echo "Tagging ECR image with new tag:$1-$2"
-    MANIFEST=$(aws ecr batch-get-image --repository-name "$3" --image-ids imageTag=$2 --output json | jq --raw-output --join-output '.images[0].imageManifest')
-    aws ecr put-image --repository-name "$3" --image-tag "$1-$2" --image-manifest "$MANIFEST"
-    aws ecr describe-images --repository-name "$3"
-}
+    local image_tag=$1
+    local commit_id=$2
+    local repository=$3
 
-function tag_service_platform_service {
-    echo "Adding tags to shared service."
-    yq e ".tags.application_name = \"$1\"" inputs.yaml -i
-    yq e ".tags.application_version = \"$2\"" inputs.yaml -i
-    yq e ".tags.exclusive_service_name = \"$3\"" inputs.yaml -i
-    yq e ".tags.exclusive_service_version = \"$4\"" inputs.yaml -i
-    yq e ".tags.envoy_name = \"$5\"" inputs.yaml -i
-    yq e ".tags.envoy_version = \"$6\"" inputs.yaml -i
-    yq e ".tags.otel_collector_name = \"$7\"" inputs.yaml -i
-    yq e ".tags.otel_collector_version = \"$8\"" inputs.yaml -i
-    yq e ".tags.properties_version = \"$9\"" inputs.yaml -i
+    echo "Tagging ECR image with new tag:$image_tag-$commit_id"
+    manifest=$(aws ecr batch-get-image --repository-name "$3" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
+    aws ecr put-image --repository-name "$repository" --image-tag "$image_tag-$commit_id" --image-manifest "$manifest"
+    aws ecr describe-images --repository-name "$repository"
 }
 
 function cp_docker_settings {
