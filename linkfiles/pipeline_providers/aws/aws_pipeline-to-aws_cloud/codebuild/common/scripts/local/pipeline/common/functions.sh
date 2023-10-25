@@ -219,36 +219,52 @@ function run_terragrunt_apply {
 }
 
 function codebuild_status_callback {
-    if [ $6 -eq 1 ]; then build_status="SUCCESSFUL"; else build_status="FAILED"; fi
+    local commit_id=$1
+    local callback_url=$2
+    local git_userename=$3
+    local git_token=$4
+    local is_pipeline_last_stage=$5
+    local codebuild_build_succeeding=$6
+    local codebuild_build_url=$7
+    local codebuild_build_id=$8
+
+    if [ $codebuild_build_succeeding -eq 1 ]; then build_status="SUCCESSFUL"; else build_status="FAILED"; fi
     payload="{\"state\""':'"\"${build_status}\", \
-        \"key\""':'"\"$1\", \
-        \"url\""':'"\"$7\", \
-        \"name\""':'"\"$1""\", \
-        \"description\""':'"\"Build $8 completed with status ${build_status}\"}"
+        \"key\""':'"\"$commit_id\", \
+        \"url\""':'"\"$codebuild_build_url\", \
+        \"name\""':'"\"$commit_id""\", \
+        \"description\""':'"\"Build $codebuild_build_id completed with status ${build_status}\"}"
     header="Content-Type"':'" application/json"
-    if [ "${build_status}" == "FAILED" ] || [ "$5" == "true" ]; then
-        curl -u "$3"':'"$4" -H "${header}" -d "${payload}" "https://$2/rest/build-status/1.0/commits/$1" -v
+    if [ "${build_status}" == "FAILED" ] || [ "$is_pipeline_last_stage" == "true" ]; then
+        curl -u "$git_userename"':'"$git_token" -H "${header}" -d "${payload}" "https://$callback_url/rest/build-status/1.0/commits/$commit_id" -v
     fi
     echo "Codebuild finished with status:${build_status}"
 }
 
 function copy_dependency_to_internals {
-    if [ "$1" == "pipelines" ]; then
-        INTERNALS_FILE="$2/caf-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml"
+    local internals_service=$1
+    local buildspec_path=$2
+    local target_dir=$3
+    local webhook_git_url=$4
+    local webhook_dir=$5
+
+    if [ "$internals_service" == "pipelines" ]; then
+        internals_file="$buildspec_path"
     else
-        cd "$2/caf-build-agent/components/git-webhook-lambda" || exit 1
-        pwd
+        git clone "$webhook_git_url" "$webhook_dir"
+        cd "$webhook_dir" || exit 1
         # shellcheck source=/dev/null
         source "./build_deployable_zip.sh"
-        INTERNALS_FILE="./lambda.zip"
+        internals_file="./lambda.zip"
     fi
-    echo "Copying $1 to $3"
-    cp "${INTERNALS_FILE}" "$3"
+    echo "Copying $1 to $target_dir"
+    cp "${internals_file}" "$target_dir"
 }
 
 function create_global_vars_script {
     local merge_commit_id=$1
     local latest_commit_hash=$2
+    local git_project=$3
     local git_repo=$4
     local from_branch=$5
     local to_branch=$6
@@ -257,6 +273,7 @@ function create_global_vars_script {
     local image_tag=$9
     local service_commit=${10}
     local codebuild_src_dir=${11}
+    local git_org=${12}
 
     echo "Creating shell script with global variables"1
     cd "$codebuild_src_dir" || exit 1
@@ -276,6 +293,8 @@ function create_global_vars_script {
         tag="${image_tag}-${svc_commit}";
     fi
     {   echo "export GIT_REPO=\"$git_repo\"";
+        echo "export GIT_PROJECT=\"$git_project\"";
+        echo "export GIT_ORG=\"$git_org\"";
         echo "export FROM_BRANCH=\"$from_branch\"";
         echo "export TO_BRANCH=\"$to_branch\"";
         echo "export MERGE_COMMIT_ID=\"${commit_id}\"";
@@ -303,7 +322,6 @@ function check_git_changes_for_internals {
     local internals_diff
 
     echo "Checking if git changes are in the 'internals' folder."
-
     git fetch origin
 
     if [ "$commit_id" = "$(git rev-parse "origin/$main_branch")" ]; then
@@ -323,12 +341,12 @@ function check_git_changes_for_internals {
             fi
         fi
     else
-        internals_diff=$(git diff "$1" "origin/$main_branch" -- "internals")
+        internals_diff=$(git diff "$commit_id" "origin/$main_branch" -- "internals")
         if [[ -z "${internals_diff}" ]]; then
             echo "No git changes found in 'internals' folder"
             return 1
         else
-            outside_internals_diff=$(git diff "$1" "origin/$main_branch" --name-only | grep -v '^internals/')
+            outside_internals_diff=$(git diff "$commit_id" "origin/$main_branch" --name-only | grep -v '^internals/')
             if [[ -n "${outside_internals_diff}" ]]; then
                 echo "Changes found both inside and outside 'internals' folder."
                 exit 1
@@ -394,16 +412,6 @@ function end_stage_if_properties_trigger {
         echo "$properties_suffix repo found to trigger pipeline: $repository"
         echo "Exiting stage as successful"
         exit 0
-    fi
-}
-
-function get_properties_suffix {
-    local suffix=$1
-
-    if [ -z "$suffix" ]; then 
-        echo "-properties"
-    else
-        echo "$suffix"
     fi
 }
 

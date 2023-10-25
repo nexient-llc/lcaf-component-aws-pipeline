@@ -65,8 +65,10 @@ function terragrunt_internals {
         assume_iam_role "${ROLE_TO_ASSUME}" "${aws_profile}" "${region_dir}"
         copy_dependency_to_internals \
             "${INTERNALS_SERVICE}" \
-            "${TOOLS_DIR}" \
-            "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}"
+            "$TOOLS_DIR/caf-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
+            "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}" \
+            "https://github.com/nexient-llc/git-webhook-lambda.git" \
+            "${CODEBUILD_SRC_DIR}/git-webhook"
         cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}/" || exit 1
         run_terragrunt_init
         if [ "$type" == "plan" ]; then
@@ -127,7 +129,8 @@ function tf_post_deploy_functional_test {
             "${CODEBUILD_WEBHOOK_MERGE_COMMIT}" \
             "${CODEBUILD_WEBHOOK_BASE_REF}" \
             "${CODEBUILD_WEBHOOK_HEAD_REF}" \
-            "${CODEBUILD_SOURCE_REPO_URL}"
+            "${CODEBUILD_SOURCE_REPO_URL}" \
+            "${GIT_ORG}"
         copy_zip_to_s3_bucket "${USERVAR_S3_CODEPIPELINE_BUCKET}" "${CODEBUILD_SRC_DIR}"
         exit 1
     fi
@@ -152,7 +155,12 @@ function trigger_pipeline {
         "${GIT_SERVER_URL}" \
         "${IMAGE_TAG}" \
         "${SERVICE_COMMIT}" \
-        "${CODEBUILD_SRC_DIR}"
+        "${CODEBUILD_SRC_DIR}" \
+        "${CODEBUILD_WEBHOOK_MERGE_COMMIT}" \
+        "${CODEBUILD_WEBHOOK_BASE_REF}" \
+        "${CODEBUILD_WEBHOOK_HEAD_REF}" \
+        "${CODEBUILD_SOURCE_REPO_URL}" \
+        "${GIT_ORG}"
     git_checkout \
         "${MERGE_COMMIT_ID}" \
         "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
@@ -164,35 +172,56 @@ function trigger_pipeline {
 
 function codebuild_status {
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
-    codebuild_status_callback "${MERGE_COMMIT_ID}" "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}" "${IS_PIPELINE_LAST_STAGE}" "${CODEBUILD_BUILD_SUCCEEDING}" "${CODEBUILD_BUILD_URL}" "${CODEBUILD_BUILD_ID}"
+    codebuild_status_callback \
+        "${MERGE_COMMIT_ID}" 
+        "${GIT_SERVER_URL}" 
+        "${GIT_USERNAME}" 
+        "${GIT_TOKEN}" 
+        "${IS_PIPELINE_LAST_STAGE}" 
+        "${CODEBUILD_BUILD_SUCCEEDING}" 
+        "${CODEBUILD_BUILD_URL}" 
+        "${CODEBUILD_BUILD_ID}"
 }
 
 function set_vars_script_and_clone_service {
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh" "${BUILD_BRANCH}"
 
-    PROPERTIES_REPO_SUFFIX=$(get_properties_suffix "${GIT_PROPERTIES_SUFFIX}")
-    export PROPERTIES_REPO_SUFFIX
-    echo "PROPERTIES_REPO_SUFFIX: ${PROPERTIES_REPO_SUFFIX}"
-
     if [ -z "$GIT_SERVER_URL" ]; then
         if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
             echo "[ERROR] cannot find repository url"
         else
-            export GIT_SERVER_URL="${CODEBUILD_SOURCE_REPO_URL}"
-            export GIT_REPO=$(basename "${CODEBUILD_SOURCE_REPO_URL}" ".git")
-            export MERGE_COMMIT_ID="${CODEBUILD_WEBHOOK_MERGE_COMMIT}"
-            export FROM_BRANCH="${CODEBUILD_WEBHOOK_HEAD_REF}"
-            export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF}"
+            protocol="${CODEBUILD_SOURCE_REPO_URL%%://*}://"
+            domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
+            base="${domain%%/*}"
+            export GIT_SERVER_URL="$protocol$base"
+            export GIT_REPO=$(echo "$CODEBUILD_SOURCE_REPO_URL" | sed 's|.*/||' | sed "s/\.git$//")
         fi
     fi
+    if [ -z "$GIT_ORG" ]; then
+        if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
+            echo "[ERROR] cannot find repository url"
+            export GIT_ORG="scm/${GIT_PROJECT}"
+        else
+            domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
+            base="${domain%%/*}"
+            export GIT_ORG=$(echo "${domain}" | sed "s/^${base}\///" | sed "s/\/${GIT_REPO}\.git$//")
+        fi
+    fi
+    if [ -z "$CODEBUILD_WEBHOOK_MERGE_COMMIT" ]; then
+        export MERGE_COMMIT_ID="${CODEBUILD_WEBHOOK_MERGE_COMMIT}"
+    fi
 
-    clone_repositories
-}
+    export PROPERTIES_REPO_SUFFIX="-${CODEBUILD_WEBHOOK_MERGE_COMMIT:-properties}"
+    export MERGE_COMMIT_ID="${CODEBUILD_WEBHOOK_MERGE_COMMIT:-MERGE_COMMIT_ID}"
+    export FROM_BRANCH="${CODEBUILD_WEBHOOK_HEAD_REF:-FROM_BRANCH}"
+    export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF:-TO_BRANCH}"
 
-function clone_repositories {
     git_clone_service
     git_clone_service_properties
+    set_commit_vars
+}
 
+function set_commit_vars {
     if [ -z "$LATEST_COMMIT_HASH" ]; then
         if [ "$GIT_REPO" == "${GIT_REPO%"$PROPERTIES_REPO_SUFFIX"}" ]; then
             export LATEST_COMMIT_HASH="${SERVICE_COMMIT}"
@@ -204,11 +233,10 @@ function clone_repositories {
     if [ -z "$MERGE_COMMIT_ID" ]; then
         MERGE_COMMIT_ID=$(git -C "${CODEBUILD_SRC_DIR}/${GIT_REPO}" rev-parse "${FROM_BRANCH}")
     fi
-
 }
 
 function git_clone_service {
-    local trimmed_git_url="${GIT_SERVER_URL#https://}"
+    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO}.git"
     git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone \
         "$SVC_BRANCH" \
@@ -220,7 +248,7 @@ function git_clone_service {
 }
 
 function git_clone_service_properties {
-    local trimmed_git_url="${GIT_SERVER_URL#https://}"
+    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO}.git"
     git_clone \
         "$SVC_PROP_BRANCH" \
         "https://$GIT_USERNAME:$GIT_TOKEN@${trimmed_git_url%.git}${PROPERTIES_REPO_SUFFIX}.git" \
