@@ -275,7 +275,7 @@ function create_global_vars_script {
     local codebuild_src_dir=${11}
     local git_org=${12}
 
-    echo "Creating shell script with global variables"1
+    echo "Creating shell script with global variables"
     cd "$codebuild_src_dir" || exit 1
     if [ -z "$merge_commit_id" ]; then 
         commit_id="$latest_commit_hash";
