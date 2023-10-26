@@ -217,6 +217,7 @@ function set_vars_script_and_clone_service {
     export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF:-$TO_BRANCH}"
     TO_BRANCH="${TO_BRANCH#refs/heads/}"
 
+    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone_service
     git_clone_service_properties
     set_commit_vars
@@ -240,7 +241,6 @@ function set_commit_vars {
 
 function git_clone_service {
     local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO}.git"
-    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone \
         "$SVC_BRANCH" \
         "https://$GIT_USERNAME:$GIT_TOKEN@${trimmed_git_url}" \
