@@ -126,10 +126,6 @@ function tf_post_deploy_functional_test {
             "${IMAGE_TAG}" \
             "${SERVICE_COMMIT}" \
             "${CODEBUILD_SRC_DIR}" \
-            "${CODEBUILD_WEBHOOK_MERGE_COMMIT}" \
-            "${CODEBUILD_WEBHOOK_BASE_REF}" \
-            "${CODEBUILD_WEBHOOK_HEAD_REF}" \
-            "${CODEBUILD_SOURCE_REPO_URL}" \
             "${GIT_ORG}"
         copy_zip_to_s3_bucket "${USERVAR_S3_CODEPIPELINE_BUCKET}" "${CODEBUILD_SRC_DIR}"
         exit 1
@@ -156,10 +152,6 @@ function trigger_pipeline {
         "${IMAGE_TAG}" \
         "${SERVICE_COMMIT}" \
         "${CODEBUILD_SRC_DIR}" \
-        "${CODEBUILD_WEBHOOK_MERGE_COMMIT}" \
-        "${CODEBUILD_WEBHOOK_BASE_REF}" \
-        "${CODEBUILD_WEBHOOK_HEAD_REF}" \
-        "${CODEBUILD_SOURCE_REPO_URL}" \
         "${GIT_ORG}"
     git_checkout \
         "${MERGE_COMMIT_ID}" \
@@ -172,6 +164,10 @@ function trigger_pipeline {
 
 function codebuild_status {
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
+    if [ "$GIT_SERVER_URL" == 'github.com' ]; then
+        echo "GIT_SERVER_URL found to be github, callback is not available for github."
+        return 0
+    fi
     codebuild_status_callback \
         "${MERGE_COMMIT_ID}" 
         "${GIT_SERVER_URL}" 
@@ -188,7 +184,7 @@ function set_vars_script_and_clone_service {
 
     if [ -z "$GIT_SERVER_URL" ]; then
         if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
-            echo "[ERROR] cannot find repository url"
+            echo "[ERROR] cannot find repository url for git server"
         else
             protocol="${CODEBUILD_SOURCE_REPO_URL%%://*}://"
             domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
@@ -199,7 +195,7 @@ function set_vars_script_and_clone_service {
     fi
     if [ -z "$GIT_ORG" ]; then
         if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
-            echo "[ERROR] cannot find repository url"
+            echo "[ERROR] cannot find repository url for git org"
             export GIT_ORG="scm/${GIT_PROJECT}"
         else
             domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
@@ -207,7 +203,7 @@ function set_vars_script_and_clone_service {
             export GIT_ORG=$(echo "${domain}" | sed "s/^${base}\///" | sed "s/\/${GIT_REPO}\.git$//")
         fi
     fi
-    if [ -z "$CODEBUILD_WEBHOOK_MERGE_COMMIT" ]; then
+    if [ -n "$CODEBUILD_WEBHOOK_MERGE_COMMIT" ]; then
         export MERGE_COMMIT_ID="${CODEBUILD_WEBHOOK_MERGE_COMMIT}"
     fi
 

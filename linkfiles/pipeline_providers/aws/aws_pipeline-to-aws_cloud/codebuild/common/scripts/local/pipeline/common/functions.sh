@@ -5,7 +5,7 @@ function set_vars_from_script {
     local dir=$2
 
     if [ -f "$vars_script" ]; then
-        echo "Making $1 script executable and running it"
+        echo "Making $vars_script script executable and running it"
         cat "$vars_script"
         chmod +x "$vars_script"
         # shellcheck source=/dev/null
