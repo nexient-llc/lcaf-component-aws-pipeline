@@ -212,8 +212,10 @@ function set_vars_script_and_clone_service {
     fi
 
     export PROPERTIES_REPO_SUFFIX="-${CODEBUILD_WEBHOOK_MERGE_COMMIT:-properties}"
-    export FROM_BRANCH="${FROM_BRANCH:-${CODEBUILD_WEBHOOK_HEAD_REF:-$FROM_BRANCH}}"
+    export FROM_BRANCH="${CODEBUILD_WEBHOOK_HEAD_REF:-$FROM_BRANCH}"
+    FROM_BRANCH="${FROM_BRANCH#refs/heads/}"
     export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF:-$TO_BRANCH}"
+    TO_BRANCH="${TO_BRANCH#refs/heads/}"
 
     git_clone_service
     git_clone_service_properties
