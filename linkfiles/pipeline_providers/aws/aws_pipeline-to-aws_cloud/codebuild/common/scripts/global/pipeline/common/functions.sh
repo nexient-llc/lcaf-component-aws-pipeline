@@ -232,7 +232,9 @@ function set_commit_vars {
     fi
 
     if [ -z "$MERGE_COMMIT_ID" ]; then
+        git_checkout "${FROM_BRANCH}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
         MERGE_COMMIT_ID=$(git -C "${CODEBUILD_SRC_DIR}/${GIT_REPO}" rev-parse "${FROM_BRANCH}")
+        git checkout -
     fi
 }
 

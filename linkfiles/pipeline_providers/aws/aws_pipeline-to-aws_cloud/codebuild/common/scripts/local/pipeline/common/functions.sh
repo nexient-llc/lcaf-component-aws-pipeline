@@ -58,18 +58,18 @@ function git_clone {
 }
 
 function git_checkout {
-    local repository=$1
+    local branch=$1
     local dir=$2
-    local local_branch=$3
+    local create_local_branch=$3
 
     echo "cd $dir"
     cd "$dir" || exit 1
-    if [ -z "$local_branch" ]; then 
-        echo "git checkout $repository"
-        git checkout "$repository"
+    if [ -z "$create_local_branch" ]; then 
+        echo "git checkout $branch"
+        git checkout "$branch"
     else
-        echo "git checkout -b $repository"
-        git checkout -b "$repository"
+        echo "git checkout -b $branch"
+        git checkout -b "$branch"
     fi
 }
 
