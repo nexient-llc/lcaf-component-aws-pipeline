@@ -26,17 +26,19 @@ function terragrunt_plan {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO}" || exit 1
 
-    if check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
-        terragrunt_internals "plan"
-    elif ! check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
-        echo "Exiting terragrunt plan as git changes found outside internals with this stage INTERNALS_PIPELINE == true"
-        exit 0
-    elif check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" != "true" ]; then
-        echo "Exiting terragrunt plan as git changes found inside internals with this stage INTERNALS_PIPELINE != true"
-        exit 0
-    else
-        terragrunt_service "apply"
-    fi
+    # if check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
+    #     terragrunt_internals "plan"
+    # elif ! check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
+    #     echo "Exiting terragrunt plan as git changes found outside internals with this stage INTERNALS_PIPELINE == true"
+    #     exit 0
+    # elif check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" != "true" ]; then
+    #     echo "Exiting terragrunt plan as git changes found inside internals with this stage INTERNALS_PIPELINE != true"
+    #     exit 0
+    # else
+    #     terragrunt_service "apply"
+    # fi
+
+    terragrunt_service "apply"
 }
 
 function terragrunt_deploy {

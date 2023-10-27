@@ -321,11 +321,6 @@ function check_git_changes_for_internals {
     local main_branch="${2:-main}"
     local internals_diff
 
-    # todo: remove ignore bypass after testing
-    if [ "${IGNORE_INTERNALS}" == "true" ];then
-        return 0
-    fi
-
     echo "Checking if git changes are in the 'internals' folder."
     git fetch origin
 
