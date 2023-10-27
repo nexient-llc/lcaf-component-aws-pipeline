@@ -299,7 +299,7 @@ function create_global_vars_script {
         echo "export TO_BRANCH=\"$to_branch\"";
         echo "export MERGE_COMMIT_ID=\"${commit_id}\"";
         echo "export CONTAINER_IMAGE_NAME=\"$git_repo\"";
-        echo "export GIT_SERVER_URL=\"${git_server_url#https://}\"";
+        echo "export GIT_SERVER_URL=\"${git_server_url}\"";
         echo "export IMAGE_TAG=\"$tag\""; 
     } >> vars.sh
     mv -f vars.sh set_vars.sh
@@ -320,6 +320,11 @@ function check_git_changes_for_internals {
     local commit_id=$1
     local main_branch="${2:-main}"
     local internals_diff
+
+    # todo: remove ignore bypass after testing
+    if [ "${IGNORE_INTERNALS}" == "true" ];then
+        return 0
+    fi
 
     echo "Checking if git changes are in the 'internals' folder."
     git fetch origin
