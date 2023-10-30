@@ -11,7 +11,9 @@ fi
 function conftest_terraform_module {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
+    set_global_vars
     git_clone_service
+    set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
     export JOB_EMAIL="${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
@@ -27,7 +29,9 @@ function conftest_terraform_module {
 function regula_terraform_module {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
+    set_global_vars
     git_clone_service
+    set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
     export JOB_EMAIL="${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
@@ -43,7 +47,9 @@ function regula_terraform_module {
 function lint_terraform_module {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
+    set_global_vars
     git_clone_service
+    set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
     export JOB_EMAIL="${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
@@ -68,7 +74,9 @@ function lint_terraform_module {
 function make_check_module {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
+    set_global_vars
     git_clone_service
+    set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
     export JOB_EMAIL="${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}"
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"

@@ -26,19 +26,17 @@ function terragrunt_plan {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO}" || exit 1
 
-    # if check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
-    #     terragrunt_internals "plan"
-    # elif ! check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
-    #     echo "Exiting terragrunt plan as git changes found outside internals with this stage INTERNALS_PIPELINE == true"
-    #     exit 0
-    # elif check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" != "true" ]; then
-    #     echo "Exiting terragrunt plan as git changes found inside internals with this stage INTERNALS_PIPELINE != true"
-    #     exit 0
-    # else
-    #     terragrunt_service "apply"
-    # fi
-
-    terragrunt_service "apply"
+    if check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
+        terragrunt_internals "plan"
+    elif ! check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
+        echo "Exiting terragrunt plan as git changes found outside internals with this stage INTERNALS_PIPELINE == true"
+        exit 0
+    elif check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" != "true" ]; then
+        echo "Exiting terragrunt plan as git changes found inside internals with this stage INTERNALS_PIPELINE != true"
+        exit 0
+    else
+        terragrunt_service "apply"
+    fi
 }
 
 function terragrunt_deploy {
@@ -166,7 +164,7 @@ function trigger_pipeline {
 
 function codebuild_status {
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
-    if [ "$GIT_SERVER_URL" == 'github.com' ]; then
+    if [[ "$GIT_SERVER_URL" == *"github.com"* ]]; then
         echo "GIT_SERVER_URL found to be github, callback is not available for github."
         return 0
     fi
@@ -181,9 +179,7 @@ function codebuild_status {
         "${CODEBUILD_BUILD_ID}"
 }
 
-function set_vars_script_and_clone_service {
-    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh" "${BUILD_BRANCH}"
-
+function set_global_vars {
     if [ -z "$GIT_SERVER_URL" ]; then
         if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
             echo "[ERROR] cannot find repository url for git server"
@@ -214,11 +210,6 @@ function set_vars_script_and_clone_service {
     FROM_BRANCH="${FROM_BRANCH#refs/heads/}"
     export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF:-$TO_BRANCH}"
     TO_BRANCH="${TO_BRANCH#refs/heads/}"
-
-    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
-    git_clone_service
-    git_clone_service_properties
-    set_commit_vars
 }
 
 function set_commit_vars {
@@ -257,4 +248,13 @@ function git_clone_service_properties {
         PROPS_COMMIT=$(git -C "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX}" rev-parse HEAD)
     export PROPS_COMMIT
     echo "${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX} HEAD commit: ${PROPS_COMMIT}"
+}
+
+function set_vars_script_and_clone_service {
+    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh" "${BUILD_BRANCH}"
+    set_global_vars
+    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
+    git_clone_service
+    git_clone_service_properties
+    set_commit_vars
 }
