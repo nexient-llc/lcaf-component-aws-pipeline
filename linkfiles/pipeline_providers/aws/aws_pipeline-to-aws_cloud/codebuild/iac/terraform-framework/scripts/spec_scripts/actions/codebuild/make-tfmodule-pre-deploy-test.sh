@@ -14,4 +14,4 @@ fi
 
 set -e
 
-conftest_terraform_module
+make_tfmodule_pre_deploy_test

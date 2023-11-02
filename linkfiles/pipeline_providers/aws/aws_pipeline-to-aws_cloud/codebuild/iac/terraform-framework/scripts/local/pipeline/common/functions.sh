@@ -10,12 +10,7 @@ function run_make_tfmodule_fmt {
     make tfmodule/fmt
 }
 
-function run_make_tfmodule_test_conftest {
-    echo "Running make tfmodule/test/conftest"
-    make tfmodule/test/conftest
-}
-
-function run_make_tfmodule_test_regula {
+function run_make_tfmodule_pre_deploy_test {
     echo "Running make tfmodule/test/regula"
-    make tfmodule/test/regula
+    make tfmodule/pre_deploy_test
 }
