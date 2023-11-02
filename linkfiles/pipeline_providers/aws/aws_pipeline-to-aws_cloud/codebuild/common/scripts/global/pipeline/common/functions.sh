@@ -258,3 +258,11 @@ function set_vars_script_and_clone_service {
     git_clone_service_properties
     set_commit_vars
 }
+
+function bump_version {
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    bump_version "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+}

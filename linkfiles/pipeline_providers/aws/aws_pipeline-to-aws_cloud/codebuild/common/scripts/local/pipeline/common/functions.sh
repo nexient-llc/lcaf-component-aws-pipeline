@@ -432,3 +432,9 @@ function run_post_deploy_functional_test {
 function run_pre_deploy_functional_test {
     echo "TODO: Running pre deploy functional test."
 }
+
+function bump_version {
+    echo "TODO: Bump SemVer here"
+    which sbot
+    sbot --help
+}
