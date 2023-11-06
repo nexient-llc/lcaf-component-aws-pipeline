@@ -36,14 +36,6 @@ function install_asdf {
     source "$dir/.asdf/asdf.sh"
 }
 
-function install_asdf {
-    local dir=$1
-
-    echo "Sourcing ASDF"
-    # shellcheck source=/dev/null
-    source "$dir/.asdf/asdf.sh"
-}
-
 function git_clone {
     local branch=$1
     local clone_uri=$2
