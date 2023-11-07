@@ -22,8 +22,9 @@ function start_docker {
 }
 
 function push_docker_image {
+    local image_version=$1
     echo "Pushing image to ECR"
-    export CONTAINER_IMAGE_VERSION="$1" && make docker/push
+    export CONTAINER_IMAGE_VERSION="$image_version" && make docker/push
 }
 
 function python_setup {
