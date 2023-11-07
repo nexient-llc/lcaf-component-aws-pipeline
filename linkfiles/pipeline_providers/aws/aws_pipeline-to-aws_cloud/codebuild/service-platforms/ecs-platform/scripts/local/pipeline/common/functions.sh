@@ -76,7 +76,7 @@ function print_running_td {
     for SERVICE_ARN in $CLUSTER_SERVICES
         do
             echo "Task definition for :$SERVICE_ARN"
-            aws ecs describe-task-definition --task-definition $(aws ecs describe-services --cluster "$CLUSTER_ARN" --services "$SERVICE_ARN" --query "services[0].taskDefinition" --output text --profile "$profile") --profile "$1"
+            aws ecs describe-task-definition --task-definition $(aws ecs describe-services --cluster "$CLUSTER_ARN" --services "$SERVICE_ARN" --query "services[0].taskDefinition" --output text --profile "$profile") --profile "$profile"
     done
 }
 
@@ -86,7 +86,7 @@ function add_ecr_image_tag {
     local repository=$3
 
     echo "Tagging ECR image with new tag:$image_tag-$commit_id"
-    manifest=$(aws ecr batch-get-image --repository-name "$3" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
+    manifest=$(aws ecr batch-get-image --repository-name "$repository" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
     aws ecr put-image --repository-name "$repository" --image-tag "$image_tag-$commit_id" --image-manifest "$manifest"
     aws ecr describe-images --repository-name "$repository"
 }
