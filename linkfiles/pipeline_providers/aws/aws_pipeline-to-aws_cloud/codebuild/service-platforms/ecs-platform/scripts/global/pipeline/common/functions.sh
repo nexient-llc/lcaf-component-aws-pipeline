@@ -15,7 +15,7 @@ function publish_ecr_image {
     end_stage_if_properties_trigger "${GIT_REPO}" "${PROPERTIES_REPO_SUFFIX}"
     set_make_vars_and_artifact_token
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
-    cd_deploy_dir "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}" || exit 1
     cp_docker_settings
     run_make_configure
     run_make_git_config
@@ -33,13 +33,13 @@ function deploy_ecr_image {
     export JOB_EMAIL="${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}"
     git_clone "magicdust" "${GIT_USERNAME}" "${GIT_TOKEN}" "${GIT_SERVER_URL#https://}" "DSO" "${CODEBUILD_SRC_DIR}/magicdust"
     python_setup "${CODEBUILD_SRC_DIR}/magicdust"
-    cd_deploy_dir "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}" || exit 1
     git_checkout "${BUILD_BRANCH}" "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     run_make_git_config
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_codebuild_jinja
-    cd_deploy_dir "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/platform/ecs/terragrunt/env/${TARGETENV}/"
+    cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/platform/ecs/terragrunt/env/${TARGETENV}/" || exit 1
 
     find . -mindepth 2 -maxdepth 2 -type d | sed 's|^\.||' | while IFS= read -r dir; do
         deploy_dir="${dir#/}"

@@ -8,12 +8,13 @@ function run_conftest_docker {
 }
 
 function build_container_ecr {
+    local image_tag=$1
+
     run_make_configure
     make platform/devenv/configure-docker-buildx
     make docker/aws_ecr_login
-    IMAGE_TAG="$1"
-    echo "Container will be built with IMAGE_TAG=$IMAGE_TAG"
-    export CONTAINER_IMAGE_VERSION="${IMAGE_TAG}" && make docker/push
+    echo "Container will be built with IMAGE_TAG=$image_tag"
+    export CONTAINER_IMAGE_VERSION="${image_tag}" && make docker/push
 }
 
 function start_docker {
