@@ -42,7 +42,7 @@ function git_clone {
     local dir=$3
 
     echo "Cloning repo: $clone_uri"
-    if [ -z "$branch" ]; then 
+    if [ -z "$branch" ]; then
         git clone "$clone_uri" "$dir"
     else
         git clone -b "$branch" "$clone_uri" "$dir"
@@ -404,6 +404,14 @@ function end_stage_if_properties_trigger {
         echo "$properties_suffix repo found to trigger pipeline: $repository"
         echo "Exiting stage as successful"
         exit 0
+    fi
+}
+
+function get_properties_suffix {
+    if [ -z "$1" ]; then 
+        echo "-properties"
+    else
+        echo "$1"
     fi
 }
 
