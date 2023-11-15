@@ -180,18 +180,14 @@ function codebuild_status {
 }
 
 function set_global_vars {
-    if [ -z "$GIT_SERVER_URL" ]; then
-        if [ -z "$SOURCE_REPO_URL" ]; then
-            echo "[ERROR] cannot find repository url for git server"
-        else
-            protocol="${SOURCE_REPO_URL%%://*}://"
-            domain="${SOURCE_REPO_URL#*://}"
-            base="${domain%%/*}"
-            export GIT_SERVER_URL="$protocol$base"
-            export GIT_REPO=$(echo "$SOURCE_REPO_URL" | sed 's|.*/||' | sed "s/\.git$//")
-            echo "GIT_SERVER_URL: ${GIT_SERVER_URL}"
-            echo "GIT_REPO: ${GIT_REPO}"
-        fi
+    if [ -n "$SOURCE_REPO_URL" ]; then
+        protocol="${SOURCE_REPO_URL%%://*}://"
+        domain="${SOURCE_REPO_URL#*://}"
+        base="${domain%%/*}"
+        export GIT_SERVER_URL="$protocol$base"
+        export GIT_REPO=$(echo "$SOURCE_REPO_URL" | sed 's|.*/||' | sed "s/\.git$//")
+        echo "GIT_SERVER_URL: ${GIT_SERVER_URL}"
+        echo "GIT_REPO: ${GIT_REPO}"
     fi
 
     if [ -z "$GIT_ORG" ]; then
@@ -202,7 +198,7 @@ function set_global_vars {
             domain="${SOURCE_REPO_URL#*://}"
             base="${domain%%/*}"
             export GIT_ORG=$(echo "${domain}" | sed "s/^${base}\///" | sed "s/\/${GIT_REPO}\.git$//")
-            echo "GIT_REPO: ${GIT_REPO}"
+            echo "GIT_ORG: ${GIT_REPO}"
         fi
     fi
 
