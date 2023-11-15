@@ -408,10 +408,12 @@ function end_stage_if_properties_trigger {
 }
 
 function get_properties_suffix {
-    if [ -z "$1" ]; then 
+    local properties_suffix=$1
+
+    if [ -z "$properties_suffix" ]; then 
         echo "-properties"
     else
-        echo "$1"
+        echo "$properties_suffix"
     fi
 }
 
