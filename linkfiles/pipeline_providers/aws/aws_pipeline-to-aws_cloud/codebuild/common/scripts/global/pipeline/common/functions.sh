@@ -198,7 +198,7 @@ function set_global_vars {
             domain="${SOURCE_REPO_URL#*://}"
             base="${domain%%/*}"
             export GIT_ORG=$(echo "${domain}" | sed "s/^${base}\///" | sed "s/\/${GIT_REPO}\.git$//")
-            echo "GIT_ORG: ${GIT_REPO}"
+            echo "GIT_ORG: ${GIT_ORG}"
         fi
     fi
 
