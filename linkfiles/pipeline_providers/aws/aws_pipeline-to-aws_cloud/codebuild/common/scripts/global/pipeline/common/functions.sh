@@ -180,36 +180,29 @@ function codebuild_status {
 }
 
 function set_global_vars {
-    if [ -z "$GIT_SERVER_URL" ]; then
-        if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
-            echo "[ERROR] cannot find repository url for git server"
-        else
-            protocol="${CODEBUILD_SOURCE_REPO_URL%%://*}://"
-            domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
-            base="${domain%%/*}"
-            export GIT_SERVER_URL="$protocol$base"
-            export GIT_REPO=$(echo "$CODEBUILD_SOURCE_REPO_URL" | sed 's|.*/||' | sed "s/\.git$//")
-        fi
+    if [ -n "$SOURCE_REPO_URL" ]; then
+        protocol="${SOURCE_REPO_URL%%://*}://"
+        domain="${SOURCE_REPO_URL#*://}"
+        base="${domain%%/*}"
+        export GIT_SERVER_URL="$protocol$base"
+        export GIT_REPO=$(echo "$SOURCE_REPO_URL" | sed 's|.*/||' | sed "s/\.git$//")
+        echo "GIT_SERVER_URL: ${GIT_SERVER_URL}"
+        echo "GIT_REPO: ${GIT_REPO}"
     fi
+
     if [ -z "$GIT_ORG" ]; then
-        if [ -z "$CODEBUILD_SOURCE_REPO_URL" ]; then
+        if [ -z "$SOURCE_REPO_URL" ]; then
             echo "[ERROR] cannot find repository url for git org"
             export GIT_ORG="scm/${GIT_PROJECT}"
         else
-            domain="${CODEBUILD_SOURCE_REPO_URL#*://}"
+            domain="${SOURCE_REPO_URL#*://}"
             base="${domain%%/*}"
             export GIT_ORG=$(echo "${domain}" | sed "s/^${base}\///" | sed "s/\/${GIT_REPO}\.git$//")
+            echo "GIT_ORG: ${GIT_ORG}"
         fi
     fi
-    if [ -n "$CODEBUILD_WEBHOOK_MERGE_COMMIT" ]; then
-        export MERGE_COMMIT_ID="${CODEBUILD_WEBHOOK_MERGE_COMMIT}"
-    fi
 
-    export PROPERTIES_REPO_SUFFIX="-${CODEBUILD_WEBHOOK_MERGE_COMMIT:-properties}"
-    export FROM_BRANCH="${CODEBUILD_WEBHOOK_HEAD_REF:-$FROM_BRANCH}"
-    FROM_BRANCH="${FROM_BRANCH#refs/heads/}"
-    export TO_BRANCH="${CODEBUILD_WEBHOOK_BASE_REF:-$TO_BRANCH}"
-    TO_BRANCH="${TO_BRANCH#refs/heads/}"
+    export PROPERTIES_REPO_SUFFIX=$(get_properties_suffix "${GIT_PROPERTIES_SUFFIX}")
 }
 
 function set_commit_vars {
