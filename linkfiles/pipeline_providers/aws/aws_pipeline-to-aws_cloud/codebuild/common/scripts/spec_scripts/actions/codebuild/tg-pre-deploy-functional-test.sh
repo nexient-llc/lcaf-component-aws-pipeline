@@ -10,4 +10,4 @@ fi
 
 set -e
 
-tf_pre_deploy_functional_test
+tg_pre_deploy_functional_test

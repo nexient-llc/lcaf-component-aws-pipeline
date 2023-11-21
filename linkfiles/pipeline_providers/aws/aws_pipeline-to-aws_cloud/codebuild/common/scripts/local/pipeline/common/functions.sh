@@ -432,5 +432,36 @@ function run_post_deploy_functional_test {
 }
 
 function run_pre_deploy_functional_test {
-    echo "TODO: Running pre deploy functional test."
+    local url=$1
+
+    echo "Running pre deploy functional test."
+    terragrunt_module_loop "${url}" "asdf install"
+    terragrunt_module_loop "${url}" "make configure" 
+    terragrunt show -json | conftest test - --all-namespaces "$(terragrunt_module_loop "${url}" "policy")"
+}
+
+function terragrunt_module_loop {
+    local url=$1
+    local action=$2
+    local jq_arg=".Modules[] | select(.Source|test(\"git::${url}/tf-\")) | .Dir"
+    local return_dir=$(pwd)
+
+    for module in $(jq -r "${jq_arg}" "$(find .terragrunt-cache -name modules.json)"); do 
+        fdir="$(terragrunt terragrunt-info | jq -r .WorkingDir)/${module}"; 
+        cd "${fdir}" || exit 1;
+        echo "Running ${action} in: ${fdir}"
+        case $action in
+            "asdf install")
+                while IFS= read -r line; do asdf plugin add "$(echo "$line" | awk '{print $1}')" || true; done < .tool-versions;
+                asdf install;
+            ;;
+            "make configure")
+                make configure; 
+            ;;
+            "policy")
+                echo -n " --policy ${fdir}/components/module/policy"; 
+            ;;
+        esac
+        cd "${return_dir}" || exit 1;
+    done
 }
