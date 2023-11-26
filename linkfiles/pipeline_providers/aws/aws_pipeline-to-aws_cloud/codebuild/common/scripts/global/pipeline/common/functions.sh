@@ -27,7 +27,7 @@ function terragrunt_plan {
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO}" || exit 1
 
     if check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
-        terragrunt_internals "plan"
+        terragrunt_internals_loop "plan"
     elif ! check_git_changes_for_internals "${MERGE_COMMIT_ID}" "${BUILD_BRANCH}" && [ "${INTERNALS_PIPELINE}" == "true" ]; then
         echo "Exiting terragrunt plan as git changes found outside internals with this stage INTERNALS_PIPELINE == true"
         exit 0
@@ -35,7 +35,7 @@ function terragrunt_plan {
         echo "Exiting terragrunt plan as git changes found inside internals with this stage INTERNALS_PIPELINE != true"
         exit 0
     else
-        terragrunt_service "apply"
+        terragrunt_service_loop "plan"
     fi
 }
 
@@ -48,13 +48,13 @@ function terragrunt_deploy {
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO}" || exit 1
 
     if [ "${INTERNALS_PIPELINE}" == "true" ]; then
-        terragrunt_internals "apply"
+        terragrunt_internals_loop "apply"
     else
-        terragrunt_service "apply"
+        terragrunt_service_loop "apply"
     fi
 }
 
-function terragrunt_internals {
+function terragrunt_internals_loop {
     local type=$1
 
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/" || exit 1
@@ -71,15 +71,21 @@ function terragrunt_internals {
             "${CODEBUILD_SRC_DIR}/git-webhook"
         cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}/" || exit 1
         run_terragrunt_init
-        if [ "$type" == "plan" ]; then
-            run_terragrunt_plan
-        else
-            run_terragrunt_apply
-        fi
+        case $type in
+            "plan")
+                run_terragrunt_plan;
+            ;;
+            "apply")
+                run_terragrunt_apply;
+            ;;
+            "pre_deploy")
+                run_pre_deploy_test;
+            ;;
+        esac
     done
 }
 
-function terragrunt_service {
+function terragrunt_service_loop {
     local type=$1
 
     cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/env/${TARGETENV}/" || exit 1
@@ -91,19 +97,32 @@ function terragrunt_service {
         cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/env/${TARGETENV}/${deploy_dir}/" || exit 1
         find ${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX}/env/${TARGETENV}/${deploy_dir}/ -type f -exec cp -- {} ${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/env/${TARGETENV}/${deploy_dir}/ \;
         run_terragrunt_init
-        if [ "$type" == "plan" ]; then
-            run_terragrunt_plan
-        else
-            run_terragrunt_apply
-        fi
+        case $type in
+            "plan")
+                run_terragrunt_plan;
+            ;;
+            "apply")
+                run_terragrunt_apply;
+            ;;
+            "pre_deploy")
+                run_pre_deploy_test;
+            ;;
+        esac
     done
 }
 
-function tf_pre_deploy_functional_test {
+function pre_deploy_test {
     install_asdf "${HOME}"
     set_vars_script_and_clone_service
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
-    run_pre_deploy_functional_test
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
+    if [ "${INTERNALS_PIPELINE}" == "true" ]; then
+        terragrunt_internals_loop "pre_deploy"
+    else
+        terragrunt_service_loop "pre_deploy"
+    fi
 }
 
 function tf_post_deploy_functional_test {

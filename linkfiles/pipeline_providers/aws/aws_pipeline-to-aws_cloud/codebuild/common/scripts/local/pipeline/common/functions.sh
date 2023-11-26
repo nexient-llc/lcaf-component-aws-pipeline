@@ -396,6 +396,16 @@ function run_make_codebuild_ca_token {
     make codebuild_ca_token
 }
 
+function run_make_predict {
+    echo "Running make predict"
+    make predict
+}
+
+function run_make_release {
+    echo "Running make release"
+    make release
+}
+
 function end_stage_if_properties_trigger {
     local repository=$1
     local properties_suffix=$2
@@ -431,6 +441,34 @@ function run_post_deploy_functional_test {
     return 0
 }
 
-function run_pre_deploy_functional_test {
-    echo "TODO: Running pre deploy functional test."
+function run_pre_deploy_test {
+    echo "Running pre deploy functional test."
+    terragrunt_module_loop "asdf install"
+    terragrunt_module_loop "configure"
+    terragrunt_module_loop "regula" 
+    # terragrunt show -json | conftest test - --all-namespaces "$(terragrunt_module_loop "${url}" "policy")"
+}
+
+function terragrunt_module_loop {
+    local action=$2
+    local return_dir=$(pwd)
+    local modules=$(find ./ -type f -name "main.tf" | awk -F'/' '{print length, $0}' | sort -n | awk 'NR==1 || length == prev_length {print $2; prev_length = length}' | sed 's|/main.tf$||')
+
+    while IFS= read -r module; do
+        cd "${module}" || exit 1;
+        echo "Running ${action} in: ${module}"
+        case $action in
+            "asdf install")
+                while IFS= read -r line; do asdf plugin add "$(echo "$line" | awk '{print $1}')" || true; done < .tool-versions;
+                asdf install;
+            ;;
+            "configure")
+                make configure; 
+            ;;
+            "regula")
+                make tfmodule/test/regula; 
+            ;;
+        esac
+        cd "${return_dir}" || exit 1;
+    done <<< "${modules}"
 }

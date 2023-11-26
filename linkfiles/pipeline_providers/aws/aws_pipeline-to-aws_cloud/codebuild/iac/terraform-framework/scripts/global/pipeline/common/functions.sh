@@ -53,3 +53,23 @@ function make_tfmodule_pre_deploy_test {
     run_make_git_config
     run_make_tfmodule_pre_deploy_test
 }
+
+function launch_predict_semver {
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
+    run_launch_github_version_predict
+}
+
+function launch_apply_semver {
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
+    run_launch_github_version_apply
+}
