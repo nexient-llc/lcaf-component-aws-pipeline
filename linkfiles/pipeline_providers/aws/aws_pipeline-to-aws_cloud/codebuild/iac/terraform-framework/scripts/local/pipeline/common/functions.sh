@@ -16,11 +16,15 @@ function run_make_tfmodule_pre_deploy_test {
 }
 
 function run_launch_github_version_predict {
+    local from_branch=$1
+
     echo "Running launch github version predict"
-    launch github version predict
+    launch github version predict --source-branch "${FROM_BRANCH}"
 }
 
 function run_launch_github_version_apply {
+    local from_branch=$1
+
     echo "Running launch github version apply"
-    launch github version apply
+    launch github version apply --source-branch "${FROM_BRANCH}" --pipeline
 }

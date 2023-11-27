@@ -2,7 +2,8 @@
 
 function set_vars_from_script {
     local vars_script=$1
-    local dir=$2
+    local build_branch=$2
+    local to_branch=$3
 
     if [ -f "$vars_script" ]; then
         echo "Making $vars_script script executable and running it"
@@ -13,13 +14,13 @@ function set_vars_from_script {
     else
         echo "Could not find $vars_script"
     fi
-    if [ -z "$dir" ]; then
-        echo "Branch var is empty or not passed: $dir"
+    if [ -z "$build_branch" ]; then
+        echo "Branch var is empty or not passed: $build_branch"
     else
-        if [ "$dir" == "$TO_BRANCH" ]; then
-            echo "TO_BRANCH is equal to branch: $dir"
+        if [ "$build_branch" == "$to_branch" ]; then
+            echo "TO_BRANCH is equal to branch: $build_branch"
         else
-            echo "[ERROR] TO_BRANCH is not equal to branch: $dir"
+            echo "[ERROR] TO_BRANCH is not equal to branch: $build_branch"
             exit 1
         fi
     fi

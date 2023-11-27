@@ -263,7 +263,7 @@ function git_clone_service_properties {
 }
 
 function set_vars_script_and_clone_service {
-    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh" "${BUILD_BRANCH}"
+    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh" "${BUILD_BRANCH}" "${TO_BRANCH}"
     set_global_vars
     git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone_service
