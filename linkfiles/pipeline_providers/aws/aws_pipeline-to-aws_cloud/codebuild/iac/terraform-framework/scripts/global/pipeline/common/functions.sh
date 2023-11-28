@@ -63,12 +63,14 @@ function launch_predict_semver {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_configure
     if ! run_launch_github_version_predict "${FROM_BRANCH}"; then
-        echo "[ERROR] predict repo version failedon branch: ${FROM_BRANCH}"
+        echo "[ERROR] predict repo version failed on branch: ${FROM_BRANCH}"
         exit 1
     fi
 }
 
-function launch_apply_semver {   
+function launch_apply_semver {
+    local branch="${BUILD_BRANCH:-main}"
+
     install_asdf "${HOME}"
     set_vars_script_and_clone_service
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
@@ -76,11 +78,11 @@ function launch_apply_semver {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_configure
     run_launch_github_version_apply "${FROM_BRANCH}"
-    if git merge-base --is-ancestor "${MERGE_COMMIT_ID}" "origin/${BUILD_BRANCH}"; then
+    if git merge-base --is-ancestor "${MERGE_COMMIT_ID}" "origin/${branch}"; then
         echo "true"
         run_launch_github_version_apply "${FROM_BRANCH}"
     else 
-        echo "[ERROR] ${MERGE_COMMIT_ID} is not ancestor of ${BUILD_BRANCH}"
+        echo "[ERROR] ${MERGE_COMMIT_ID} is not ancestor of ${branch}"
         exit 1
     fi
 }
