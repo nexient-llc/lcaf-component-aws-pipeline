@@ -14,4 +14,4 @@ fi
 
 set -e
 
-make_tfmodule_pre_deploy_test
+make_check

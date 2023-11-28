@@ -35,7 +35,7 @@ function lint_terraform_module {
     exit 1
 }
 
-function make_tfmodule_make_check {
+function make_check {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
     set_global_vars
