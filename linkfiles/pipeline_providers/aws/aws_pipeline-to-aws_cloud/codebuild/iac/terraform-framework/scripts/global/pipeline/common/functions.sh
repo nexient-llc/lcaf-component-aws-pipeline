@@ -77,9 +77,7 @@ function launch_apply_semver {
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_configure
-    run_launch_github_version_apply "${FROM_BRANCH}"
     if git merge-base --is-ancestor "${MERGE_COMMIT_ID}" "origin/${branch}"; then
-        echo "true"
         run_launch_github_version_apply "${FROM_BRANCH}"
     else 
         echo "[ERROR] ${MERGE_COMMIT_ID} is not ancestor of ${branch}"
