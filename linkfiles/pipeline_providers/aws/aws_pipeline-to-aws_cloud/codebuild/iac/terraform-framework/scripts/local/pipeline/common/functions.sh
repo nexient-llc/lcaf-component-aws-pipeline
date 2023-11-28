@@ -10,9 +10,9 @@ function run_make_tfmodule_fmt {
     make tfmodule/fmt
 }
 
-function run_make_tfmodule_pre_deploy_test {
-    echo "Running make tfmodule/test/regula"
-    make tfmodule/pre_deploy_test
+function run_make_check {
+    echo "Running make check"
+    make check
 }
 
 function run_launch_github_version_predict {

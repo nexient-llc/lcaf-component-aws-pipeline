@@ -35,7 +35,7 @@ function lint_terraform_module {
     exit 1
 }
 
-function make_tfmodule_pre_deploy_test {
+function make_tfmodule_make_check {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
     set_global_vars
@@ -51,7 +51,7 @@ function make_tfmodule_pre_deploy_test {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_configure
     run_make_git_config
-    run_make_tfmodule_pre_deploy_test
+    run_make_check
 }
 
 function launch_predict_semver {
