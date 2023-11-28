@@ -39,6 +39,7 @@ function make_check {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
     set_global_vars
+    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone_service
     set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
