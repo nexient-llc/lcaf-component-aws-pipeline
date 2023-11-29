@@ -447,6 +447,7 @@ function run_pre_deploy_test {
     terragrunt_module_loop "asdf install"
     terragrunt_module_loop "configure"
     terragrunt_module_loop "regula" 
+    # terragrunt show -json | conftest test - --all-namespaces "$(terragrunt_module_loop "${url}" "policy")"
 }
 
 function terragrunt_module_loop {
