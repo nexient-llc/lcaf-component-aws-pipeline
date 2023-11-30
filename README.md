@@ -5,7 +5,7 @@
 The general pattern of how this is intended to work is:
 
 Pipeline Service --> pipeline-seed.yml --> `specs` service-platform.yml --> `spec-scripts` service-platform.sh --> `global` functions.sh --> `local` functions.sh
- 
+
 Example:
 1. #### Pipeline Service
    - AWS Codebuild requires a git repository that it is associated with to have a pipeline yaml file in the repo that the deployed instance of AWS codebuild is configured to parse when a build starts.

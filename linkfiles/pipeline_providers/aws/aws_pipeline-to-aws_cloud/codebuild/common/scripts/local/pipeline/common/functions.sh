@@ -397,16 +397,6 @@ function run_make_codebuild_ca_token {
     make codebuild_ca_token
 }
 
-function run_make_predict {
-    echo "Running make predict"
-    make predict
-}
-
-function run_make_release {
-    echo "Running make release"
-    make release
-}
-
 function end_stage_if_properties_trigger {
     local repository=$1
     local properties_suffix=$2

@@ -10,4 +10,4 @@ fi
 
 set -e
 
-semverbot_increment
+simulated_merge
