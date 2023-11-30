@@ -35,10 +35,11 @@ function lint_terraform_module {
     exit 1
 }
 
-function make_tfmodule_pre_deploy_test {
+function make_check {
     install_asdf "${HOME}"
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"  "${BUILD_BRANCH}"
     set_global_vars
+    git_config "${GIT_USERNAME}@${GIT_EMAIL_DOMAIN}" "${GIT_USERNAME}"
     git_clone_service
     set_commit_vars
     export JOB_NAME="${GIT_USERNAME}"
@@ -51,5 +52,38 @@ function make_tfmodule_pre_deploy_test {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     run_make_configure
     run_make_git_config
-    run_make_tfmodule_pre_deploy_test
+    run_make_check
+}
+
+function launch_predict_semver {
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
+    if ! run_launch_github_version_predict "${FROM_BRANCH}"; then
+        echo "[ERROR] predict repo semver failed on branch: ${FROM_BRANCH}"
+        exit 1
+    fi
+}
+
+function launch_apply_semver {
+    local branch="${BUILD_BRANCH:-main}"
+
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
+    if git merge-base --is-ancestor "${MERGE_COMMIT_ID}" "origin/${branch}"; then
+        if ! run_launch_github_version_apply "${FROM_BRANCH}"; then
+            echo "[ERROR] apply repo semver failed on branch: ${FROM_BRANCH}"
+            exit 1
+        fi
+    else 
+        echo "[ERROR] ${MERGE_COMMIT_ID} is not ancestor of ${branch}"
+        exit 1
+    fi
 }
