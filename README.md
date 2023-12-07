@@ -1,4 +1,4 @@
-# caf-component-aws-pipelines
+# caf-component-azure-pipelines
 
 ---
 ## Introduction
