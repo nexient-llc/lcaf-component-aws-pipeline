@@ -28,5 +28,5 @@ function build_container {
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     assume_iam_role "${ROLE_TO_ASSUME}" "${TARGETENV}" "${AWS_REGION}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
-    build_container_ecr "${MERGE_COMMIT_ID}"
+    build_container_ecr "${MERGE_COMMIT_ID}" "${DOCKER_BUILD_ARCH}"
 }
