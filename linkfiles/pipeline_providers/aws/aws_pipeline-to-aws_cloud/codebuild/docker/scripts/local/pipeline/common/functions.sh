@@ -16,7 +16,7 @@ function build_container_ecr {
     make docker/aws_ecr_login
     echo "Container will be built with IMAGE_TAG=$image_tag"
     export CONTAINER_IMAGE_VERSION="${image_tag}" \
-        && export DOCKER_BULD_ARCH="${arch_type}" \
+        && export DOCKER_BUILD_ARCH="${arch_type}" \
         && make docker/push
 }
 
