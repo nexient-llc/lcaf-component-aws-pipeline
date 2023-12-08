@@ -41,3 +41,8 @@ function push_container {
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
     make_docker_push "${MERGE_COMMIT_ID}" "${DOCKER_BUILD_ARCH}"
 }
+
+function tag_container {    
+    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
+    add_ecr_image_tag "${NEW_IMAGE_TAG}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
+}
