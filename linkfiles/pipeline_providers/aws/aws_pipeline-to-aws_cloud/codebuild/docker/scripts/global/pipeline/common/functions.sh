@@ -44,5 +44,6 @@ function push_container {
 
 function tag_container {    
     set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
-    add_ecr_image_tag "${NEW_IMAGE_TAG}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
+    local version_tag=$(run_launch_github_version_predict "${FROM_BRANCH}")
+    add_ecr_image_tag "${version_tag}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
 }
