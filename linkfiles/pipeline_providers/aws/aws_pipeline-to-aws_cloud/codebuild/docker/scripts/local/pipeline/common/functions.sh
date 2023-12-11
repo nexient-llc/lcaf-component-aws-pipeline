@@ -14,7 +14,7 @@ function make_docker_build {
 
     run_make_configure
     make platform/devenv/configure-docker-buildx
-    echo "Container will be built with IMAGE_TAG=$image_tag"
+    echo "Container will be built with IMAGE_TAG=$image_tag, arch_type=$arch_type"
     export DOCKER_BUILD_ARCH="${arch_type}" \
         && make docker/build
 }
