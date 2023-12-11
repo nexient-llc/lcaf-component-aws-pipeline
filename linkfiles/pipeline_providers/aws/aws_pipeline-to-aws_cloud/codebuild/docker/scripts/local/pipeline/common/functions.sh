@@ -16,20 +16,21 @@ function make_docker_build {
     run_make_configure
     make platform/devenv/configure-docker-buildx
     echo "Container will be built with IMAGE_TAG=$image_tag"
-    make docker/build
+    export DOCKER_BUILD_ARCH="${arch_type}" \
+        && make docker/build
 }
 
 function make_docker_push {
     local image_tag=$1
     local arch_type=$2
     export CONTAINER_IMAGE_VERSION="${image_tag}"
-    export DOCKER_BUILD_ARCH="${arch_type}"
 
     run_make_configure
     make platform/devenv/configure-docker-buildx
     make docker/aws_ecr_login
     echo "Container will be built with IMAGE_TAG=$image_tag"
-    make docker/push
+    export DOCKER_BUILD_ARCH="${arch_type}" \
+        && make docker/push
 }
 
 function start_docker {
@@ -43,6 +44,6 @@ function add_ecr_image_tag {
     local repository=$3
 
     echo "Tagging ECR image with new tag:$image_tag"
-    manifest=$(aws ecr batch-get-image --repository-name "$repository" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
-    aws ecr put-image --repository-name "$repository" --image-tag "$image_tag" --image-manifest "$manifest"
+    manifest=$(aws ecr batch-get-image --region "us-east-2" --repository-name "$repository" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
+    aws ecr put-image --region "us-east-2" --repository-name "$repository" --image-tag "$image_tag" --image-manifest "$manifest"
 }
