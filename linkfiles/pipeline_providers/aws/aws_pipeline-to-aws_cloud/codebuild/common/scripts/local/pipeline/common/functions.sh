@@ -418,6 +418,16 @@ function get_properties_suffix {
     fi
 }
 
+function run_launch_github_version_predict {
+    local from_branch=$1
+    launch github version predict --source-branch "${from_branch}"
+}
+
+function run_launch_github_version_apply {
+    local from_branch=$1
+    launch github version apply --source-branch "${from_branch}" --pipeline
+}
+
 # TODO: Stubs
 
 function run_post_deploy_functional_test {
