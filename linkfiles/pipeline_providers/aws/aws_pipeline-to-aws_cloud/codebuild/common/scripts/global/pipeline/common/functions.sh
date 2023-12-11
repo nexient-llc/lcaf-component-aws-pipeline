@@ -199,7 +199,9 @@ function codebuild_status {
 }
 
 function set_global_vars {
-    if [ -n "$SOURCE_REPO_URL" ]; then
+    if [ -z "$SOURCE_REPO_URL" ]; then
+        echo "SOURCE_REPO_URL not found: ${SOURCE_REPO_URL}"
+    else
         protocol="${SOURCE_REPO_URL%%://*}://"
         domain="${SOURCE_REPO_URL#*://}"
         base="${domain%%/*}"
