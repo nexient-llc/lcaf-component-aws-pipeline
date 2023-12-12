@@ -46,5 +46,3 @@ function tag_container {
     local version_tag=$(run_launch_github_version_predict "${FROM_BRANCH}")
     add_ecr_image_tag "${version_tag}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
 }
-
-add_ecr_image_tag "1.0.0" "0.1.0" "caf-build-agent"
