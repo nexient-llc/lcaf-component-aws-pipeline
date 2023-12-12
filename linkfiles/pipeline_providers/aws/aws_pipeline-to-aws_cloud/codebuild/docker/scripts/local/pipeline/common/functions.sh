@@ -39,6 +39,6 @@ function add_ecr_image_tag {
     local repository=$3
 
     echo "Tagging ECR image with new tag:$image_tag"
-    manifest=$(aws ecr batch-get-image --region "us-east-2" --repository-name "$repository" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
-    aws ecr put-image --region "us-east-2" --repository-name "$repository" --image-tag "$image_tag" --image-manifest "$manifest"
+    manifest=$(aws ecr batch-get-image --repository-name "$repository" --image-ids imageTag=$commit_id --output json | jq --raw-output --join-output '.images[0].imageManifest')
+    aws ecr put-image --repository-name "$repository" --image-tag "$image_tag" --image-manifest "$manifest"
 }
