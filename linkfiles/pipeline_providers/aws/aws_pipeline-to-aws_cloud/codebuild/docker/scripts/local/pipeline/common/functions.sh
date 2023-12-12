@@ -15,7 +15,7 @@ function make_docker_build {
     run_make_configure
     make platform/devenv/configure-docker-buildx
     echo "Container will be built with IMAGE_TAG=$image_tag, arch_type=$arch_type"
-    make DOCKER_BUILD_ARCH="${arch_type}" docker/build
+    make docker/build
 }
 
 function make_docker_push {
@@ -27,7 +27,7 @@ function make_docker_push {
     make platform/devenv/configure-docker-buildx
     make docker/aws_ecr_login
     echo "Container will be built with IMAGE_TAG=$image_tag"
-    make DOCKER_BUILD_ARCH="${arch_type}" docker/push
+    make docker/push
 }
 
 function start_docker {
