@@ -10,6 +10,7 @@ function run_conftest_docker {
 function make_docker_build {
     local image_tag=$1
     local arch_type=$2
+    export CONTAINER_IMAGE_VERSION="${image_tag}"
 
     run_make_configure
     make platform/devenv/configure-docker-buildx
@@ -20,6 +21,7 @@ function make_docker_build {
 function make_docker_push {
     local image_tag=$1
     local arch_type=$2
+    export CONTAINER_IMAGE_VERSION="${image_tag}"
 
     run_make_configure
     make platform/devenv/configure-docker-buildx
