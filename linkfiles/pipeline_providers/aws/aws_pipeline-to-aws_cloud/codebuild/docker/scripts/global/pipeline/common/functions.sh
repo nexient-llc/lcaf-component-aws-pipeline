@@ -28,8 +28,7 @@ function build_container {
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     assume_iam_role "${ROLE_TO_ASSUME}" "${TARGETENV}" "${AWS_REGION}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
-    make_docker_build "${MERGE_COMMIT_ID}" "${DOCKER_BUILD_ARCH}"
-}
+    make_docker_build "${MERGE_COMMIT_ID}"
 
 function push_container {
     start_docker
@@ -39,7 +38,7 @@ function push_container {
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     assume_iam_role "${ROLE_TO_ASSUME}" "${TARGETENV}" "${AWS_REGION}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
-    make_docker_push "${MERGE_COMMIT_ID}" "${DOCKER_BUILD_ARCH}"
+    make_docker_push "${MERGE_COMMIT_ID}"
 }
 
 function tag_container {    
@@ -47,3 +46,5 @@ function tag_container {
     local version_tag=$(run_launch_github_version_predict "${FROM_BRANCH}")
     add_ecr_image_tag "${version_tag}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
 }
+
+add_ecr_image_tag "1.0.0" "0.1.0" "caf-build-agent"
