@@ -43,7 +43,12 @@ function push_container {
 }
 
 function tag_container {    
-    set_vars_from_script "${CODEBUILD_SRC_DIR}/set_vars.sh"
+    install_asdf "${HOME}"
+    set_vars_script_and_clone_service
+    git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
+    tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
+    set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
+    run_make_configure
     local version_tag=$(run_launch_github_version_predict "${FROM_BRANCH}")
     add_ecr_image_tag "${version_tag}" "${MERGE_COMMIT_ID}" "${GIT_REPO}"
 }
