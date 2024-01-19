@@ -65,7 +65,7 @@ function terragrunt_internals_loop {
         assume_iam_role "${ROLE_TO_ASSUME}" "${aws_profile}" "${region_dir}"
         copy_dependency_to_internals \
             "${INTERNALS_SERVICE}" \
-            "$TOOLS_DIR/caf-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
+            "$TOOLS_DIR/launch-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
             "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}" \
             "https://github.com/nexient-llc/git-webhook-lambda.git" \
             "${CODEBUILD_SRC_DIR}/git-webhook"
