@@ -148,7 +148,7 @@ function assume_iam_role {
     local region=$3
 
     echo "Assuming the IAM deployment role"
-    sts_creds=$(aws sts assume-role --role-arn "$role_arn" --role-session-name caf-build-agent)
+    sts_creds=$(aws sts assume-role --role-arn "$role_arn" --role-session-name launch-build-agent)
     access_key=$(echo "${sts_creds}" | jq -r '.Credentials.AccessKeyId')
     secret_access_key=$(echo "${sts_creds}" | jq -r '.Credentials.SecretAccessKey')
     session_token=$(echo "${sts_creds}" | jq -r '.Credentials.SessionToken')
