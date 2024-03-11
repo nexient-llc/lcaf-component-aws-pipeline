@@ -65,9 +65,9 @@ function terragrunt_internals_loop {
         assume_iam_role "${ROLE_TO_ASSUME}" "${aws_profile}" "${region_dir}"
         copy_dependency_to_internals \
             "${INTERNALS_SERVICE}" \
-            "$TOOLS_DIR/caf-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
+            "$TOOLS_DIR/launch-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
             "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}" \
-            "https://github.com/nexient-llc/git-webhook-lambda.git" \
+            "https://$GIT_USERNAME:$GIT_TOKEN@${GIT_SERVER_URL#https://}/${GIT_ORG}/git-webhook-lambda.git" \
             "${CODEBUILD_SRC_DIR}/git-webhook"
         cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}/" || exit 1
         run_terragrunt_init
@@ -243,7 +243,7 @@ function set_commit_vars {
 }
 
 function git_clone_service {
-    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO}.git"
+    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}.git"
     git_clone \
         "$SVC_BRANCH" \
         "https://$GIT_USERNAME:$GIT_TOKEN@${trimmed_git_url}" \
@@ -254,10 +254,10 @@ function git_clone_service {
 }
 
 function git_clone_service_properties {
-    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO}.git"
+    local trimmed_git_url="${GIT_SERVER_URL#https://}/${GIT_ORG}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX}.git"
     git_clone \
         "$SVC_PROP_BRANCH" \
-        "https://$GIT_USERNAME:$GIT_TOKEN@${trimmed_git_url%.git}${PROPERTIES_REPO_SUFFIX}.git" \
+        "https://$GIT_USERNAME:$GIT_TOKEN@${trimmed_git_url}" \
         "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX}" &&
         PROPS_COMMIT=$(git -C "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}${PROPERTIES_REPO_SUFFIX}" rev-parse HEAD)
     export PROPS_COMMIT

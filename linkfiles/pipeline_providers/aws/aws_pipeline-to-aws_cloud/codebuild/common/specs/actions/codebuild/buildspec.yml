@@ -3,7 +3,7 @@ version: 0.2
 phases:
   build:
     commands:
-      - eval "${CAF_CODEBUILD_ACTION}"
+      - eval "${LAUNCH_ACTION}"
   post_build:
     commands:
       - codebuild-status
