@@ -67,7 +67,7 @@ function terragrunt_internals_loop {
             "${INTERNALS_SERVICE}" \
             "$TOOLS_DIR/launch-build-agent/components/module/linkfiles/pipeline_providers/aws/aws_pipeline-to-aws_cloud/codebuild/common/specs/actions/codebuild/buildspec.yml" \
             "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}" \
-            "https://github.com/nexient-llc/git-webhook-lambda.git" \
+            "https://$GIT_USERNAME:$GIT_TOKEN@${GIT_SERVER_URL#https://}/${GIT_ORG}/git-webhook-lambda.git" \
             "${CODEBUILD_SRC_DIR}/git-webhook"
         cd "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}/internals/${INTERNALS_SERVICE}/provider/aws/terragrunt/env/${TARGETENV}/${deploy_dir}/" || exit 1
         run_terragrunt_init
