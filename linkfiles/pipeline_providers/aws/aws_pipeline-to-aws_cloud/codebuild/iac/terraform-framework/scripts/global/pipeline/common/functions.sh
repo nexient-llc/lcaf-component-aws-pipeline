@@ -61,7 +61,6 @@ function launch_predict_semver {
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
-    run_make_configure
     if ! run_launch_github_version_predict "${FROM_BRANCH}"; then
         echo "[ERROR] predict repo semver failed on branch: ${FROM_BRANCH}"
         exit 1
@@ -76,7 +75,6 @@ function launch_apply_semver {
     git_checkout "${MERGE_COMMIT_ID}" "${CODEBUILD_SRC_DIR}/${GIT_REPO}"
     tool_versions_install "${CODEBUILD_SRC_DIR}/${GIT_REPO%"${PROPERTIES_REPO_SUFFIX}"}"
     set_netrc "${GIT_SERVER_URL}" "${GIT_USERNAME}" "${GIT_TOKEN}"
-    run_make_configure
     if git merge-base --is-ancestor "${MERGE_COMMIT_ID}" "origin/${branch}"; then
         if ! run_launch_github_version_apply "${FROM_BRANCH}"; then
             echo "[ERROR] apply repo semver failed on branch: ${FROM_BRANCH}"
