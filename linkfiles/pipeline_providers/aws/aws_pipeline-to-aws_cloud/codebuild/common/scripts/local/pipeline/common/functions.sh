@@ -319,7 +319,7 @@ function check_git_changes_for_internals {
 
     if [ "$commit_id" = "$(git rev-parse "origin/$main_branch")" ]; then
         echo "Commit hash is the same as origin/${main_branch}"
-        internals_diff=$(git diff "origin/$main_branch^" "origin/$MAIN_BRANCH" -- "internals")
+        internals_diff=$(git diff "origin/$main_branch^" "origin/$main_branch" -- "internals")
         if [[ -z "${internals_diff}" ]]; then
             echo "No git changes found in 'internals' folder"
             return 1
